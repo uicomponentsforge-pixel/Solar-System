@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#02030a">
+<title>Helios · 3D Solar System Explorer</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<canvas id="scene" tabindex="0" aria-label="Interactive 3D Solar System"></canvas>
+<div id="labels" aria-hidden="true"></div>
+
+<!-- Loading screen -->
+<div id="loader">
+  <div class="loader-core">
+    <div class="loader-orbit"><span></span></div>
+    <h1>Helios</h1>
+    <p id="loader-text">Preparing the solar system…</p>
+    <div class="bar"><i id="loader-bar"></i></div>
+  </div>
+</div>
+
+<!-- Top bar -->
+<header id="topbar" class="glass">
+  <div class="brand">
+    <span class="logo" aria-hidden="true"></span>
+    <div class="brand-text"><b>Helios</b><small>Solar System Explorer</small></div>
+  </div>
+
+  <div class="search" id="search">
+    <input id="search-input" type="search" placeholder="Search Earth, Titan, Ceres, Halley…" autocomplete="off" spellcheck="false" aria-label="Search objects">
+    <div id="search-results" class="results hidden" role="listbox"></div>
+  </div>
+
+  <div class="seg" id="scale-seg" role="group" aria-label="Scale mode">
+    <button data-scale="edu" class="active" title="Educational scale: planets stay visible">🌌 <span class="txt">Educational</span></button>
+    <button data-scale="rel" title="Relative scale: true size ratios and true distance ratios">📏 <span class="txt">Relative</span></button>
+  </div>
+
+  <button class="btn" id="btn-compare" title="Compare two worlds">⚖ <span class="txt">Compare</span></button>
+  <button class="btn" id="btn-layers" title="Show or hide layers">☰ <span class="txt">Layers</span></button>
+  <button class="btn" id="btn-help" title="Help and controls">?</button>
+</header>
+
+<!-- Quick jump -->
+<nav id="quick" aria-label="Quick jump"></nav>
+
+<!-- Layers -->
+<aside id="layers" class="glass" aria-label="Layers">
+  <h3>Layers</h3>
+  <label class="tgl"><input type="checkbox" data-toggle="orbits" checked><span class="sw"></span><span>Orbit paths</span></label>
+  <label class="tgl"><input type="checkbox" data-toggle="labels" checked><span class="sw"></span><span>Labels</span></label>
+  <label class="tgl"><input type="checkbox" data-toggle="moons" checked><span class="sw"></span><span>Moons</span></label>
+  <label class="tgl"><input type="checkbox" data-toggle="asteroids" checked><span class="sw"></span><span>Asteroid belt</span></label>
+  <label class="tgl"><input type="checkbox" data-toggle="comets" checked><span class="sw"></span><span>Comets</span></label>
+  <label class="tgl"><input type="checkbox" data-toggle="kuiper" checked><span class="sw"></span><span>Kuiper Belt</span></label>
+  <label class="tgl"><input type="checkbox" data-toggle="oort" checked><span class="sw"></span><span>Oort Cloud</span></label>
+</aside>
+
+<!-- Info panel -->
+<aside id="info" class="glass hidden" aria-live="polite"></aside>
+
+<!-- Control dock -->
+<footer id="dock" class="glass">
+  <div class="grp">
+    <button class="btn active" id="btn-play" title="Play (Space)">▶ <span class="txt">Play</span></button>
+    <button class="btn" id="btn-pause" title="Pause (Space)">⏸ <span class="txt">Pause</span></button>
+  </div>
+  <div class="grp speed">
+    <span class="ico" title="Simulation speed">⏩</span>
+    <input id="speed" type="range" min="0" max="100" value="50" aria-label="Simulation speed">
+    <output id="speed-out">1.0×</output>
+  </div>
+  <div class="grp">
+    <button class="btn" id="btn-zoom-in" title="Zoom in (W / +)">🔍</button>
+    <button class="btn" id="btn-zoom-out" title="Zoom out (S / −)">🔎</button>
+    <button class="btn" id="btn-reset" title="Reset camera (R)">↺ <span class="txt">Reset</span></button>
+    <button class="btn" id="btn-focus" title="Focus on selected object (F)">🎯 <span class="txt">Focus</span></button>
+  </div>
+  <div class="seg" id="mode-seg" role="group" aria-label="Camera mode">
+    <button data-mode="free" title="Free camera: stays where you leave it">Free</button>
+    <button data-mode="follow" class="active" title="Follow object: travels with the selected object">Follow</button>
+  </div>
+</footer>
+
+<!-- Compare -->
+<div id="compare" class="modal hidden" role="dialog" aria-modal="true" aria-label="Compare worlds">
+  <div class="modal-card glass">
+    <div class="modal-head">
+      <h2>Compare worlds</h2>
+      <button class="btn icon" id="cmp-close" aria-label="Close">✕</button>
+    </div>
+    <div class="cmp-pick">
+      <select id="cmp-a" aria-label="First world"></select>
+      <button class="btn icon" id="cmp-swap" title="Swap" aria-label="Swap">⇄</button>
+      <select id="cmp-b" aria-label="Second world"></select>
+    </div>
+    <div id="cmp-body"></div>
+  </div>
+</div>
+
+<!-- Help -->
+<div id="help" class="modal hidden" role="dialog" aria-modal="true" aria-label="Help">
+  <div class="modal-card glass">
+    <div class="modal-head">
+      <h2>Flying around</h2>
+      <button class="btn icon" id="help-close" aria-label="Close">✕</button>
+    </div>
+    <div class="help-grid">
+      <div>
+        <h4>Mouse</h4>
+        <p>Drag to orbit · right-drag or Shift-drag to pan · scroll to zoom · click any object to inspect it.</p>
+        <h4>Touch</h4>
+        <p>One finger orbits · two fingers pinch to zoom and drag to pan · tap an object to select it.</p>
+      </div>
+      <div>
+        <h4>Keyboard</h4>
+        <p>Arrows orbit · W / S zoom · A / D pan · Space play or pause · F focus · R reset · / search · Esc close.</p>
+        <h4>About the scales</h4>
+        <p><b>Educational</b> keeps every world visible while preserving order and rough spacing. <b>Relative</b> uses true size ratios and true distance ratios (the Sun is shrunk so Mercury stays outside it). Orbital speeds are compressed so distant worlds still move.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" role="status"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
